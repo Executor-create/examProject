@@ -16,6 +16,6 @@ const bookSchema = new Schema({
   countOfPages: { type: Number },
 });
 
-const Book = new model('books', bookSchema);
+const Book = new model('books', bookSchema, 'books');
 
 module.exports = { Book }
