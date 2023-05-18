@@ -1,7 +1,7 @@
 const { Schema, model } = require('mongoose');
+const { ObjectId } = Schema.Types;
 
 const userSchema = new Schema({
-  _id: { type: ObjectId },
   name: { type: String },
   login: { type: String },
   password: { type: String },

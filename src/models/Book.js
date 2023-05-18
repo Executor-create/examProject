@@ -1,7 +1,6 @@
 const { Schema, model } = require('mongoose');
 
 const bookSchema = new Schema({
-  _id: { type: ObjectId },
   title: { type: String },
   category: { type: String },
   createdAt: { type: Date },
