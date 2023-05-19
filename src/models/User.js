@@ -7,7 +7,8 @@ const userSchema = new Schema({
   password: { type: String },
   bookLimit: { type: Number },
   books: [{
-    id: { type: ObjectId },
+    _id: { type: ObjectId },
+    book_id: { type: String },
     dateOfTake: { type: Date },
     dateOfReturn: { type: Date },
     comment: { type: String },
