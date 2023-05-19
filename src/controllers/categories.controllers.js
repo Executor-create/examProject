@@ -28,13 +28,9 @@ const updateCategory = async (req, res) => {
     return res.status(404).send('Category not found');
   }
 
-  const books = await Book.find({ category: category.name });
+  const updatedBooks = await Book.updateMany({ category: category.name }, { category: name });
 
-  if (books.length > 0) {
-    await Book.updateMany({ category: category.name }, { category: name });
-  }
-
-  res.status(200).send(updatedCategory);
+  res.status(200).send({ updatedCategory, updatedBooks: updatedBooks.modifiedCount });
 }
 
 module.exports = {
