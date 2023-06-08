@@ -68,7 +68,7 @@ describe("Category", () => {
     });
 
     it("should return status code 200 and update category", async () => {
-      
+
     });
   });
 });
