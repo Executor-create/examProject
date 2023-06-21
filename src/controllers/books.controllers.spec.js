@@ -1,16 +1,17 @@
-const { addBook } = require('./books.controllers');
-const { getBook } = require('./books.controllers');
+const { addBook, getBook, getBookByFilter } = require('./books.controllers');
 
 const bookMock = {};
 
 jest.mock("../models/Book", () => {
   bookMock.save = jest.fn();
   bookMock.findById = jest.fn();
+  bookMock.find = jest.fn();
 
   return {
     Book: jest.fn().mockImplementation(() => ({
       save: bookMock.save,
       findById: bookMock.findById,
+      find: bookMock.find,
     }))
   }
 });
@@ -114,4 +115,28 @@ describe("Book", () => {
       expect(res.status).toBeCalledWith(200);
     })
   })
+  describe("getBookByFilter", () => {
+    it("should return books based on the provided filters", async () => {
+      const req = {
+        query: {
+          categories: "fiction,thriller",
+          title: "Harry Potter",
+          search: "magic",
+          isAvailable: "true",
+        },
+      };
+
+      const res = {
+        status: jest.fn().mockImplementation(() => res),
+        send: jest.fn(),
+      };
+
+      bookMock.find.mockImplementationOnce(async () => { return {} });
+
+      await getBookByFilter(req, res);
+
+      expect(res.status).toBeCalledTimes(2);
+      expect(res.status).toBeCalledWith(200);
+    });
+  });
 })

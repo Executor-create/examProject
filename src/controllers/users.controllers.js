@@ -15,21 +15,22 @@ const getBookForUser = async (req, res) => {
   const { _id } = req.params;
   const { book_id } = req.body;
 
-  const user = await User.findById(_id);
-
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+  let user;
+  try {
+    user = await User.findById(_id);
+  } catch (err) {
+    return res.status(404).send(err);
   }
 
   const book = await Book.findById(book_id);
 
   if (!book || book.quantity.available === 0) {
-    return res.status(400).json("Book not available");
+    return res.status(400).send("Book not available");
   }
 
   const borrowedBooksCount = user.books.filter(book => !book.dateOfReturn).length;
   if (user.bookLimit > 0 && borrowedBooksCount >= user.bookLimit) {
-    return res.status(400).json({ error: 'User has reached the book limit' });
+    return res.status(400).send('User has reached the book limit');
   }
 
   user.books.push({ book_id: book_id });
@@ -45,27 +46,21 @@ const returnBook = async (req, res) => {
   const { _id } = req.params;
   const { book_id, comment } = req.body;
 
-  const user = await User.findById(_id);
+  let user;
+  let book;
+  try {
+    user = await User.findById(_id);
 
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
-  }
+    book = user.books.find(book => book.book_id === book_id);
 
-  const book = user.books.find(book => book.book_id === book_id);
+    book.dateOfReturn = new Date();
+    book.comment = comment;
 
-  if (!book) {
-    return res.status(404).json({ error: 'Book not found in user collection' });
-  }
+    await user.save();
 
-  book.dateOfReturn = new Date();
-  book.comment = comment;
-
-  await user.save();
-
-  const updatedBook = await Book.findByIdAndUpdate(book_id, { $inc: { 'quantity.available': 1 } }, { new: true });
-
-  if (!updatedBook) {
-    return res.status(404).json({ error: 'Book not found' });
+    await Book.findByIdAndUpdate(book_id, { $inc: { 'quantity.available': 1 } }, { new: true });
+  } catch (err) {
+    res.status(404).send(err);
   }
 
   return res.status(200).send(user);

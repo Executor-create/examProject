@@ -1,5 +1,4 @@
-const { addUser } = require("./users.controllers");
-const { getBookForUser } = require('./users.controllers');
+const { addUser, getBookForUser, returnBook } = require("./users.controllers");
 
 const UserMock = {};
 
@@ -19,10 +18,12 @@ const bookMock = {};
 
 jest.mock("../models/Book", () => {
   bookMock.findById = jest.fn();
+  bookMock.findByIdAndUpdate = jest.fn();
 
   return {
     Book: jest.fn().mockImplementation(() => ({
       findById: bookMock.findById,
+      findByIdAndUpdate: bookMock.findByIdAndUpdate,
     }))
   }
 });
@@ -102,9 +103,45 @@ describe("User", () => {
       expect(res.status).toBeCalledTimes(1);
       expect(res.status).toBeCalledWith(404);
     });
+  })
+  describe("return book", () => {
+    it('should return the user with updated book and status code 200 when user and book exist', async () => {
+      const req = {
+        params: { _id: '123' },
+        body: { book_id: '456', comment: 'Returned book' },
+      };
+      const res = {
+        status: jest.fn().mockImplementation(() => res),
+        send: jest.fn(),
+      };
 
-    it('should successfully get the book for the user', async () => {
-     
+      UserMock.findById.mockImplementationOnce(async () => { return {} })
+      bookMock.findByIdAndUpdate.mockImplementationOnce(async () => { return {} })
+
+      await returnBook(req, res);
+
+      expect(res.status).toBeCalledTimes(2);
+      expect(res.status).toBeCalledWith(200);
+    });
+    it('should return a 404 error when error', async () => {
+      const req = {
+        params: { _id: '123' },
+        body: { book_id: '456', comment: 'Returned book' },
+      };
+      const res = {
+        status: jest.fn().mockImplementation(() => res),
+        send: jest.fn(),
+      };
+
+      UserMock.findById.mockImplementationOnce(async () => { throw new Error() });
+      UserMock.save.mockImplementationOnce(async () => { throw new Error() });
+      bookMock.findByIdAndUpdate.mockImplementationOnce(async () => { throw new Error() });
+
+      await returnBook(req, res);
+
+      expect(res.status).toBeCalledTimes(2);
+      expect(res.status).toBeCalledWith(404);
+
     });
   })
 });

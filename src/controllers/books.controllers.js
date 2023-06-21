@@ -1,14 +1,20 @@
 const { Book } = require('../models/Book');
+const {Category} = require("../models/Category");
 
 const addBook = async (req, res) => {
   const { title, category, description: { short, full }, countOfPages, quantity } = req.body;
+  const fetchedCategory = await Category.findOne({category: {}})
+
+  if(!fetchedCategory) {
+    return res.sta
+  }
 
   if (short.length > 256) {
-    return res.status(400).json({ error: "Short description is too long" });
+    return res.status(400).send({ error: "Short description is too long" });
   }
 
   if (countOfPages < 0 || quantity < 0) {
-    return res.status(400).json({ error: "Cannot have negative values for count of pages or quantity" });
+    return res.status(400).send({ error: "Cannot have negative values for count of pages or quantity" });
   }
 
   const book = new Book({
@@ -25,16 +31,17 @@ const addBook = async (req, res) => {
     res.status(500).send(error);
   });
 
-  res.status(201).send(newBook);
+  return res.status(201).send(newBook);
 }
 
 const getBook = async (req, res) => {
   const { _id } = req.params;
 
-  const book = await Book.findById(_id);
-
-  if (!book) {
-    return res.status(404).json({ error: "Book not found" });
+  let book;
+  try {
+    book = await Book.findById(_id);
+  } catch (err) {
+   return res.status(404).send(err);
   }
 
   res.status(200).send(book);
@@ -61,7 +68,22 @@ const getBookByFilter = async (req, res) => {
     ]
   };
 
-  const books = await Book.find(filters);
+  if (isAvailable) {
+    if (isAvailable == 'true') {
+      filters['quantity.available'] = { $gt: 0 };
+    }
+    if (isAvailable === 'false') {
+      filters['quantity.available'] = 0;
+    }
+  }
+
+  let books;
+  try {
+    books = await Book.find(filters);
+  } catch (err) {
+    res.status(404).send("Books not found");
+  }
+
   res.status(200).send(books);
 }
 

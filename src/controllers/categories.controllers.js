@@ -6,9 +6,12 @@ const addCategory = async (req, res) => {
 
   const category = new Category({ name });
 
-  const newCategory = await category.save().catch((error) => {
-    res.status(400).send(error);
-  })
+  let newCategory;
+  try {
+    newCategory = await category.save();
+  } catch (err) {
+    return res.status(400).send(err);
+  }
 
   res.status(201).send(newCategory);
 }
@@ -17,20 +20,24 @@ const updateCategory = async (req, res) => {
   const { _id } = req.params;
   const { name } = req.body;
 
-  const category = await Category.findById(_id)
+  let category;
+  let updatedCategory;
+  // let updatedBooks;
+  try {
+    category = await Category.findById(_id);
 
-  const updatedCategory = await Category.findByIdAndUpdate(
-    _id,
-    { name },
-  );
+    updatedCategory = await Category.findByIdAndUpdate(
+      _id,
+      { name },
+    );
 
-  if (!updatedCategory) {
-    return res.status(404).send('Category not found');
+    updatedBooks = await Book.updateMany({ category: category.name }, { category: name });
+  } catch (err) {
+    res.status(404).send(err);
   }
 
-  const updatedBooks = await Book.updateMany({ category: category.name }, { category: name });
-
-  res.status(200).send({ updatedCategory, updatedBooks: updatedBooks.modifiedCount });
+  res.status(200).send({ updatedCategory });
+  //updatedBooks: updatedBooks.modifiedCount
 }
 
 module.exports = {
